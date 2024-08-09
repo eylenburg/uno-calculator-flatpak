@@ -1,0 +1,53 @@
+app-id: uno.platform.uno-calculator
+runtime: org.freedesktop.Sdk
+runtime-version: '23.08'
+sdk: org.freedesktop.Sdk
+command: start-uno-calculator.sh
+
+finish-args:
+  - --socket=x11
+  - --device=dri
+  - --share=ipc
+modules:
+  - shared-modules/lzo/lzo.json
+  - shared-modules/squashfs-tools/squashfs-tools.json
+
+  - name: uno-calculator
+    buildsystem: simple
+    build-commands:
+      - unsquashfs uno-calculator.snap
+      - mkdir /app/uno-calculator
+      - chmod +x squashfs-root/Calculator.Skia.Gtk
+      - cp -r squashfs-root/* /app/uno-calculator
+      - ffmpeg -i /app/uno-calculator/meta/gui/icon.png -vf scale=128:128 icon_128.png
+      - install -Dm644 "icon_128.png" "/app/share/icons/hicolor/128x128/apps/${FLATPAK_ID}.png"
+      - install -Dm644 "/app/uno-calculator/meta/gui/uno-calculator.desktop" "/app/share/applications/${FLATPAK_ID}.desktop"
+      - desktop-file-edit --set-key=Icon --set-value=${FLATPAK_ID} "/app/share/applications/${FLATPAK_ID}.desktop"
+      - desktop-file-edit --set-key=Exec --set-value=start-uno-calculator.sh "/app/share/applications/${FLATPAK_ID}.desktop"
+      - install -Dm644 uno.platform.uno-calculator.appdata.xml "/app/share/metainfo/${FLATPAK_ID}.appdata.xml"
+      - install -Dm755 start-uno-calculator.sh /app/bin/start-uno-calculator.sh
+    sources:
+      - type: file
+        dest-filename: uno-calculator.snap
+        only-arches: [x86_64]
+        url: https://api.snapcraft.io/api/v1/snaps/download/ZZjSue7jjdQXHsNz5RI9BH3Pf3UnRo0V_58.snap
+        sha256: 2687cbbda5af4aeb5b65a2d8c0c645f1993666df98ba608e827770ed0683d518
+        x-checker-data:
+          type: snapcraft
+          name: uno-calculator
+          channel: stable
+      - type: file
+        dest-filename: uno-calculator.snap
+        only-arches: [aarch64]
+        url: https://api.snapcraft.io/api/v1/snaps/download/ZZjSue7jjdQXHsNz5RI9BH3Pf3UnRo0V_59.snap
+        sha256: f7f72a780b2691a4a091be13671362f5c55c0117532b24f8200bf34f2cb47b35
+        x-checker-data:
+          type: snapcraft
+          name: uno-calculator
+          channel: stable
+      - type: file
+        path: uno.platform.uno-calculator.appdata.xml
+      - type: script
+        dest-filename: start-uno-calculator.sh
+        commands:
+          - MESA_GL_VERSION_OVERRIDE=2.0 exec /app/uno-calculator/Calculator.Skia.Gtk "$@"
